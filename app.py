@@ -20,7 +20,7 @@ def select_THBperWatt(SolarInstallCapacity):
     else:
         return THBperWatt_set3
 
-def analyse_fn(SolarInstallCapacity, num2_txt, num3_txt, num4_txt, num5_txt, optimizer_checkbox, num6_txt, PannelPower):
+def analyse_fn(SolarInstallCapacity, customer_name_txt, customer_addr_txt, expire_date_txt, num5_txt, optimizer_checkbox, num6_txt, PannelPower, quotation_number_txt):
     # Use the new function to select the set
     THBperWatt = select_THBperWatt(SolarInstallCapacity)
     THBperkWp = [x * 1000 if x is not None else None for x in THBperWatt]
@@ -34,16 +34,18 @@ def analyse_fn(SolarInstallCapacity, num2_txt, num3_txt, num4_txt, num5_txt, opt
     ws = wb.active
 
     # Fill header info
-    ws["C8"] = "Customer: " + num2_txt
+    ws["C8"] = "Customer: " + customer_name_txt
     ws["C8"].font = Font(name="TH SarabunPSK", size=12)
-    ws["C9"] = "Bill To: " + num3_txt
+    ws["C9"] = "Bill To: " + customer_addr_txt
     ws["C9"].font = Font(name="TH SarabunPSK", size=12)
-    ws["C28"] = "Until " + num4_txt
+    ws["C28"] = "Until " + expire_date_txt
     ws["C28"].font = Font(name="TH SarabunPSK", size=12)
     ws["C33"] = num5_txt
     ws["C33"].font = Font(name="TH SarabunPSK", size=12)
     ws["C34"] = num6_txt
     ws["C34"].font = Font(name="TH SarabunPSK", size=12)
+    ws["L5"] = quotation_number_txt
+    ws["L5"].font = Font(name="TH SarabunPSK", size=12)
 
     # Update pannel_capacity from user input
     pannel_capacity = PannelPower / 1000  # kWp per panel
@@ -120,23 +122,35 @@ if __name__ == "__main__":
                     value=600
                 )
             with gr.Row():
-                num2_txt = gr.Textbox(label="ชื่อลูกค้า", value="- ชื่อลูกค้า -")
-                num3_txt = gr.Textbox(label="ที่อยู่ลูกค้า", value="- ที่อยู่ลูกค้า -")
+                customer_name_txt = gr.Textbox(label="ชื่อลูกค้า", value="- ชื่อลูกค้า -")
+                customer_addr_txt = gr.Textbox(label="ที่อยู่ลูกค้า", value="- ที่อยู่ลูกค้า -")
             with gr.Row():
                 optimizer_checkbox = gr.Checkbox(label="Optimizer/rapid shutdown", value=True)
             with gr.Row():
-                num4_txt = gr.Textbox(label="วันหมดอายุใบเสนอราคา", value="- วันหมดอายุใบเสนอราคา -")
-                num5_txt = gr.Dropdown(label="ชื่อผู้อนุมัติ", choices=approver_options, value=approver_options[0] if approver_options else "-")
-                num6_txt = gr.Dropdown(label="ตำแหน่ง", choices=position_options, value=position_options[0] if position_options else "-")
+                expire_date_txt = gr.Textbox(label="วันหมดอายุใบเสนอราคา", value="- วันหมดอายุใบเสนอราคา -")
+                approval_name_dd = gr.Dropdown(label="ชื่อผู้อนุมัติ", choices=approver_options, value=approver_options[0] if approver_options else "-")
+                approval_position_dd = gr.Dropdown(label="ตำแหน่ง", choices=position_options, value=position_options[0] if position_options else "-")
+            with gr.Row():
+                quotation_number_txt = gr.Textbox(label="เลขที่ใบเสนอราคา", value="- Quotation No. -")
             with gr.Row():
                 generate_report_btn = gr.Button("สร้างรายงาน")
             with gr.Row():
-                download = gr.File(label="ดาวน์โหลดไฟล์ที่แก้ไขแล้ว")
+                download_file = gr.File(label="ดาวน์โหลดไฟล์ที่แก้ไขแล้ว")
 
             generate_report_btn.click(
                 fn=analyse_fn,
-                inputs=[SolarInstallCapacity, num2_txt, num3_txt, num4_txt, num5_txt, optimizer_checkbox, num6_txt, PannelPower],
-                outputs=download
+                inputs=[
+                    SolarInstallCapacity,
+                    customer_name_txt,
+                    customer_addr_txt,
+                    expire_date_txt,
+                    approval_name_dd,
+                    optimizer_checkbox,
+                    approval_position_dd,
+                    PannelPower,
+                    quotation_number_txt  # เพิ่มตรงนี้
+                ],
+                outputs=download_file
             )
 
     solar_price_estimator.launch()
